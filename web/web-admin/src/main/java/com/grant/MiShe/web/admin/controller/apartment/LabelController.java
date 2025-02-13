@@ -4,8 +4,10 @@ package com.grant.MiShe.web.admin.controller.apartment;
 import com.grant.MiShe.common.result.Result;
 import com.grant.MiShe.model.entity.LabelInfo;
 import com.grant.MiShe.model.enums.ItemType;
+import com.grant.MiShe.web.admin.service.LabelInfoService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -15,9 +17,15 @@ import java.util.List;
 @RequestMapping("/admin/label")
 public class LabelController {
 
+    @Autowired
+    private LabelInfoService labelInfoService;
+
     @Operation(summary = "（根据类型）查询标签列表")
     @GetMapping("list")
     public Result<List<LabelInfo>> labelList(@RequestParam(required = false) ItemType type) {
+
+
+
         return Result.ok();
     }
 
