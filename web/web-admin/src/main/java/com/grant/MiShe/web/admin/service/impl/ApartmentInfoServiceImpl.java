@@ -1,13 +1,22 @@
 package com.grant.MiShe.web.admin.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
+import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.grant.MiShe.common.exception.LeaseException;
+import com.grant.MiShe.common.result.ResultCodeEnum;
 import com.grant.MiShe.model.entity.*;
 import com.grant.MiShe.model.enums.ItemType;
-import com.grant.MiShe.web.admin.mapper.ApartmentInfoMapper;
+import com.grant.MiShe.web.admin.mapper.*;
 import com.grant.MiShe.web.admin.service.*;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.grant.MiShe.web.admin.vo.apartment.ApartmentDetailVo;
+import com.grant.MiShe.web.admin.vo.apartment.ApartmentItemVo;
+import com.grant.MiShe.web.admin.vo.apartment.ApartmentQueryVo;
 import com.grant.MiShe.web.admin.vo.apartment.ApartmentSubmitVo;
+import com.grant.MiShe.web.admin.vo.fee.FeeValueVo;
 import com.grant.MiShe.web.admin.vo.graph.GraphVo;
+import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.util.CollectionUtils;
@@ -36,6 +45,24 @@ public class ApartmentInfoServiceImpl extends ServiceImpl<ApartmentInfoMapper, A
 
     @Autowired
     private ApartmentFeeValueService apartmentFeeValueService;
+
+    @Autowired
+    private ApartmentInfoMapper apartmentInfoMapper;
+
+    @Autowired
+    private GraphInfoMapper graphInfoMapper;
+
+    @Autowired
+    private LabelInfoMapper labelInfoMapper;
+
+    @Autowired
+    private FacilityInfoMapper facilityInfoMapper;
+
+    @Autowired
+    private FeeValueMapper feeValueMapper;
+
+    @Autowired
+    private RoomInfoMapper roomInfoMapper;
 
     @Override
     public void saveOrUpdateApartment(ApartmentSubmitVo apartmentSubmitVo) {
@@ -117,6 +144,68 @@ public class ApartmentInfoServiceImpl extends ServiceImpl<ApartmentInfoMapper, A
         }
 
 
+
+
+    }
+
+    @Override
+    public IPage<ApartmentItemVo> pageItem(Page<ApartmentItemVo> page, ApartmentQueryVo queryVo) {
+
+        return apartmentInfoMapper.pageItem(page,queryVo);
+    }
+
+    @Override
+    public ApartmentDetailVo getDetailById(Long id) {
+        ApartmentInfo apartmentInfo = apartmentInfoMapper.selectById(id);
+
+        List<GraphVo> graphVoList=graphInfoMapper.selectListByIdAndItem(ItemType.APARTMENT,id);
+
+        List<LabelInfo> labelInfoList=labelInfoMapper.selectListByApartmentId(id);
+
+
+        List<FacilityInfo> facilityInfoList=facilityInfoMapper.selectListByApartmentId(id);
+
+        List<FeeValueVo> feeValueVoList=feeValueMapper.selectListByApartmentId(id);
+
+        ApartmentDetailVo apartmentDetailVo = new ApartmentDetailVo();
+        BeanUtils.copyProperties(apartmentInfo,apartmentDetailVo);
+        apartmentDetailVo.setGraphVoList(graphVoList);
+        apartmentDetailVo.setLabelInfoList(labelInfoList);
+        apartmentDetailVo.setFacilityInfoList(facilityInfoList);
+        apartmentDetailVo.setFeeValueVoList(feeValueVoList);
+        return apartmentDetailVo;
+    }
+
+    @Override
+    public void removeApartmentById(Long id) {
+        LambdaQueryWrapper<RoomInfo> roomInfoLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        roomInfoLambdaQueryWrapper.eq(RoomInfo::getApartmentId,id);
+        Long l = roomInfoMapper.selectCount(roomInfoLambdaQueryWrapper);
+        if(l>0){
+            throw new LeaseException(ResultCodeEnum.ADMIN_APARTMENT_DELETE_ERROR);
+        }
+
+
+        super.removeById(id);
+
+        LambdaQueryWrapper<GraphInfo> graphInfoLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        graphInfoLambdaQueryWrapper.eq(GraphInfo::getItemType, ItemType.APARTMENT);
+        graphInfoLambdaQueryWrapper.eq(GraphInfo::getId,id);
+        graphInfoService.remove(graphInfoLambdaQueryWrapper);
+
+
+        LambdaQueryWrapper<ApartmentFacility> apartmentFacilityLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        apartmentFacilityLambdaQueryWrapper.eq(ApartmentFacility::getId,id);
+        apartmentFacilityService.remove(apartmentFacilityLambdaQueryWrapper);
+
+
+        LambdaQueryWrapper<ApartmentLabel> apartmentLabelLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        apartmentLabelLambdaQueryWrapper.eq(ApartmentLabel::getId,id);
+        apartmentLabelService.remove(apartmentLabelLambdaQueryWrapper);
+
+        LambdaQueryWrapper<ApartmentFeeValue> apartmentFeeValueLambdaQueryWrapper = new LambdaQueryWrapper<>();
+        apartmentFeeValueLambdaQueryWrapper.eq(ApartmentFeeValue::getId,id);
+        apartmentFeeValueService.remove(apartmentFeeValueLambdaQueryWrapper);
 
 
     }

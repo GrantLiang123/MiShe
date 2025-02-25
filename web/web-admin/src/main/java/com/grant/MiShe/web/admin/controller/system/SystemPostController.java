@@ -1,11 +1,15 @@
 package com.grant.MiShe.web.admin.controller.system;
 
+import com.baomidou.mybatisplus.core.conditions.update.LambdaUpdateWrapper;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.grant.MiShe.common.result.Result;
 import com.grant.MiShe.model.entity.SystemPost;
 import com.grant.MiShe.model.enums.BaseStatus;
 import com.baomidou.mybatisplus.core.metadata.IPage;
+import com.grant.MiShe.web.admin.service.SystemPostService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
@@ -16,15 +20,23 @@ import java.util.List;
 @RequestMapping("/admin/system/post")
 public class SystemPostController {
 
+    @Autowired
+    private SystemPostService service;
+
     @Operation(summary = "分页获取岗位信息")
     @GetMapping("page")
     private Result<IPage<SystemPost>> page(@RequestParam long current, @RequestParam long size) {
-        return Result.ok();
+
+        IPage<SystemPost> page = new Page<>(current, size);
+        IPage<SystemPost> systemPostPage = service.page(page);
+        return Result.ok(systemPostPage);
     }
 
     @Operation(summary = "保存或更新岗位信息")
     @PostMapping("saveOrUpdate")
     public Result saveOrUpdate(@RequestBody SystemPost systemPost) {
+
+        service.saveOrUpdate(systemPost);
         return Result.ok();
     }
 
@@ -32,24 +44,31 @@ public class SystemPostController {
     @Operation(summary = "根据id删除岗位")
     public Result removeById(@RequestParam Long id) {
 
+        service.removeById(id);
         return Result.ok();
     }
 
     @GetMapping("getById")
     @Operation(summary = "根据id获取岗位信息")
     public Result<SystemPost> getById(@RequestParam Long id) {
-        return Result.ok();
+        SystemPost systemPost = service.getById(id);
+        return Result.ok(systemPost);
     }
 
     @Operation(summary = "获取全部岗位列表")
     @GetMapping("list")
     public Result<List<SystemPost>> list() {
-        return Result.ok();
+        List<SystemPost> list = service.list();
+        return Result.ok(list);
     }
 
     @Operation(summary = "根据岗位id修改状态")
     @PostMapping("updateStatusByPostId")
     public Result updateStatusByPostId(@RequestParam Long id, @RequestParam BaseStatus status) {
+        LambdaUpdateWrapper<SystemPost> updateWrapper = new LambdaUpdateWrapper<>();
+        updateWrapper.eq(SystemPost::getId, id);
+        updateWrapper.set(SystemPost::getStatus, status);
+        service.update(updateWrapper);
         return Result.ok();
     }
 }

@@ -28,3 +28,6 @@ minio:
   access-key: admin
   secret-key: 88888888
   bucket-name: mi-she
+
+springdoc:
+  default-flat-param-object: true
