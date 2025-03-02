@@ -17,6 +17,14 @@ spring:
       minimum-idle: 10 #最小空闲连接数量
       pool-name: SPHHikariPool # 连接池名称
 
+  data:
+    redis:
+      host: 10.211.55.101
+      port: 6379
+      database: 0
+      username: default
+      password: 88888888
+
 
 #用于打印框架生成的sql语句，便于调试
 mybatis-plus:
@@ -31,3 +39,5 @@ minio:
 
 springdoc:
   default-flat-param-object: true
+
+
